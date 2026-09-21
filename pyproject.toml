@@ -1,0 +1,27 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "wellmanifest-nl-api-llm"
+version = "0.1.0"
+description = "Universal Natural Language, Multi-Protocol API, and LLM Orchestration Standard and Reference Implementation"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "pydantic>=2.0.0",
+    "jsonschema>=4.0.0",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=8.0.0",
+]
+
+[tool.wellmanifest]
+standard = "0.20.32"
+revision = "b6ba9c21a65a6a5648ecf904b64c3b75295e136f"
+gate = "project/governance-check.sh"
+
+[tool.pytest.ini_options]
+addopts = "-p wellmanifest_governance"
