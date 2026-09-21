@@ -1,0 +1,116 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-001",
+  "summary": "feat(standard): normative specification, schemas, reference implementation, and prepanel-app menu for NL-API-LLM",
+  "workstream": "integration",
+  "classification": {
+    "kind": "FEATURE",
+    "priority": "P1",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "spec/**",
+    "schemas/**",
+    "standard/**",
+    "examples/**",
+    "project/ticket-001/**",
+    "project/TICKETS.md",
+    "TODO.md"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "2a2fbb0787e958e9b57a8a03e167cf9d40b846c1",
+    "targetBranch": "main",
+    "outcome": "Deliver normative specification, schemas, reference implementation, and prepanel/app API catalog and menu generator for the NL-API-LLM standard.",
+    "nonGoals": [
+      "No external API keys hardcoded.",
+      "No production credentials in example registries."
+    ],
+    "complexity": "L",
+    "estimatedMinutes": 60,
+    "budgets": {
+      "maxImplementationFiles": 15,
+      "maxAffectedComponents": 5,
+      "maxPublicInterfaceChanges": 3,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Define normative standard specification under spec/, machine-verifiable schemas under schemas/, python reference engine under standard/, and prepanel/app reference menu under examples/.",
+      "components": [
+        {
+          "name": "specification",
+          "paths": [
+            "spec/NL_API_LLM_SPECIFICATION.md"
+          ]
+        },
+        {
+          "name": "schemas",
+          "paths": [
+            "schemas/api-registry.schema.json",
+            "schemas/menu-tree.schema.json",
+            "schemas/nl-api-query.schema.json",
+            "schemas/api-action-result.schema.json"
+          ]
+        },
+        {
+          "name": "standard-reference",
+          "paths": [
+            "standard/__init__.py",
+            "standard/nl_api_llm.py",
+            "standard/test_conformance.py"
+          ]
+        },
+        {
+          "name": "examples",
+          "paths": [
+            "examples/prepanel_app_registry.json",
+            "examples/prepanel_app_menu.json",
+            "examples/api_menu_preview.html"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [
+        "Defines universal API catalog, dynamic menu generator, and NL-to-API multi-protocol dispatch interface."
+      ],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the commit on ticket branch."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 standard/nl_api_llm.py --self-test"
+        ],
+        "evidence": "Standard conformance self-test suite passes all checks."
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "pytest standard/test_conformance.py"
+        ],
+        "evidence": "Conformance test suite passes 100%."
+      },
+      {
+        "criterion": "AC-03",
+        "commands": [
+          "./project/governance-check.sh"
+        ],
+        "evidence": "Governance gate passes cleanly with 0 errors and 0 warnings."
+      }
+    ]
+  }
+}

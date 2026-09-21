@@ -1,0 +1,159 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wellmanifest.com/schemas/nl-api-llm/api-registry.schema.json",
+  "title": "UniversalApiRegistry",
+  "description": "Normative schema for the Universal Multi-Protocol API Registry (SSOT)",
+  "type": "object",
+  "required": ["schema", "version", "services", "endpoints"],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "wellmanifest.api-registry/v1"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      }
+    },
+    "services": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "protocol"],
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "protocol": {
+            "type": "string",
+            "enum": ["rest", "cli", "grpc", "websocket", "mcp", "kvm"]
+          },
+          "baseUrl": { "type": "string" },
+          "defaultPort": { "type": "integer" }
+        }
+      }
+    },
+    "endpoints": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "service", "protocol", "title", "readOnly"],
+        "properties": {
+          "id": { "type": "string" },
+          "service": { "type": "string" },
+          "protocol": {
+            "type": "string",
+            "enum": ["rest", "cli", "grpc", "websocket", "mcp", "kvm"]
+          },
+          "title": { "type": "string" },
+          "description": { "type": "string" },
+          "readOnly": { "type": "boolean" },
+          "roles": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "tags": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "rest": {
+            "type": "object",
+            "required": ["method", "path"],
+            "properties": {
+              "method": {
+                "type": "string",
+                "enum": ["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS"]
+              },
+              "path": { "type": "string" },
+              "contentType": { "type": "string", "default": "application/json" }
+            }
+          },
+          "cli": {
+            "type": "object",
+            "required": ["commandTemplate"],
+            "properties": {
+              "commandTemplate": { "type": "string" },
+              "binary": { "type": "string" }
+            }
+          },
+          "kvm": {
+            "type": "object",
+            "required": ["action"],
+            "properties": {
+              "action": {
+                "type": "string",
+                "enum": ["navigate", "type", "click", "screenshot", "focus", "scenario"]
+              }
+            }
+          },
+          "parameters": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["name", "type", "location", "required"],
+              "properties": {
+                "name": { "type": "string" },
+                "type": {
+                  "type": "string",
+                  "enum": ["string", "integer", "number", "boolean", "array", "object"]
+                },
+                "location": {
+                  "type": "string",
+                  "enum": ["path", "query", "body", "header", "flag", "arg"]
+                },
+                "required": { "type": "boolean" },
+                "default": {},
+                "description": { "type": "string" },
+                "enum": {
+                  "type": "array"
+                }
+              }
+            }
+          },
+          "nlIntents": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["lang", "phrases"],
+              "properties": {
+                "lang": { "type": "string", "enum": ["pl", "en"] },
+                "phrases": {
+                  "type": "array",
+                  "items": { "type": "string" }
+                },
+                "patterns": {
+                  "type": "array",
+                  "items": { "type": "string" }
+                }
+              }
+            }
+          },
+          "menuBinding": {
+            "type": "object",
+            "required": ["category", "label", "interactionType"],
+            "properties": {
+              "category": { "type": "string" },
+              "group": { "type": "string" },
+              "label": { "type": "string" },
+              "icon": { "type": "string" },
+              "order": { "type": "integer" },
+              "viewRoute": { "type": "string" },
+              "interactionType": {
+                "type": "string",
+                "enum": ["trigger", "modal_form", "view_navigate", "tab_open"]
+              },
+              "badge": { "type": "string" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

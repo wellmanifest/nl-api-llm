@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wellmanifest.com/schemas/nl-api-llm/api-action-result.schema.json",
+  "title": "ApiActionResult",
+  "description": "Normalized execution envelope for all multi-protocol API action outcomes",
+  "type": "object",
+  "required": ["success", "endpointId", "protocol", "timestamp"],
+  "properties": {
+    "success": { "type": "boolean" },
+    "endpointId": { "type": "string" },
+    "protocol": {
+      "type": "string",
+      "enum": ["rest", "cli", "grpc", "websocket", "mcp", "kvm"]
+    },
+    "timestamp": { "type": "string" },
+    "latencyMs": { "type": "number" },
+    "statusCode": { "type": "integer" },
+    "data": {},
+    "error": {
+      "type": "object",
+      "properties": {
+        "code": { "type": "string" },
+        "message": { "type": "string" },
+        "details": {}
+      }
+    },
+    "audit": {
+      "type": "object",
+      "properties": {
+        "caller": { "type": "string" },
+        "role": { "type": "string" },
+        "sanitizedParams": { "type": "object" }
+      }
+    }
+  }
+}
