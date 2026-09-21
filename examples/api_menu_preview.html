@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <title>API Menu & Command Palette (NL-API-LLM)</title>
+  <style>
+    :root {
+      --bg: #12141a;
+      --card-bg: #1a1d26;
+      --border: #2e3444;
+      --text: #e1e4ea;
+      --text-muted: #8b949e;
+      --accent: #3b82f6;
+      --accent-hover: #60a5fa;
+      --badge-bg: #212636;
+      --badge-text: #93c5fd;
+      --input-bg: #0d0e12;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background: var(--bg); color: var(--text); padding: 24px; }
+    .container { max-width: 1200px; margin: 0 auto; }
+    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+    h1 { font-size: 20px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+    .badge-std { font-size: 11px; background: #1e3a8a; color: #93c5fd; padding: 3px 8px; border-radius: 9999px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .palette-trigger { background: var(--card-bg); border: 1px solid var(--border); color: var(--text-muted); padding: 8px 16px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 13px; }
+    .kbd { background: var(--input-bg); border: 1px solid var(--border); padding: 2px 6px; border-radius: 4px; font-size: 11px; font-family: monospace; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 20px; }
+    .category-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 18px; }
+    .category-title { font-size: 15px; font-weight: 600; color: #60a5fa; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+    .group-title { font-size: 12px; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px; margin: 10px 0 6px 0; }
+    .menu-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; border-radius: 6px; background: rgba(255,255,255,0.02); margin-bottom: 6px; cursor: pointer; transition: all 0.15s; text-decoration: none; color: inherit; border: 1px solid transparent; }
+    .menu-item:hover { background: rgba(59, 130, 246, 0.1); border-color: rgba(59, 130, 246, 0.3); transform: translateX(2px); }
+    .item-label { font-size: 13px; font-weight: 500; }
+    .item-desc { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    .item-badge { font-size: 10px; background: var(--badge-bg); color: var(--badge-text); padding: 2px 6px; border-radius: 4px; font-family: monospace; }
+    
+    /* Command Palette Modal */
+    #palette-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); z-index: 9999; justify-content: center; align-items: flex-start; padding-top: 10vh; }
+    #palette-modal.active { display: flex; }
+    .palette-box { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; width: 100%; max-width: 640px; box-shadow: 0 20px 40px rgba(0,0,0,0.5); overflow: hidden; }
+    .palette-input { width: 100%; padding: 16px; background: var(--input-bg); border: none; border-bottom: 1px solid var(--border); color: var(--text); font-size: 15px; outline: none; }
+    .palette-results { max-height: 400px; overflow-y: auto; padding: 8px; }
+    .palette-item { padding: 10px 14px; border-radius: 8px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+    .palette-item:hover, .palette-item.selected { background: rgba(59, 130, 246, 0.2); }
+    .prompt-chip { display: inline-block; font-size: 11px; background: #262c3b; color: #cbd5e1; padding: 2px 8px; border-radius: 12px; margin: 2px; cursor: pointer; }
+    .prompt-chip:hover { background: #3b82f6; color: white; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>
+        <span>🌐 Universal API Menu</span>
+        <span class="badge-std">NL-API-LLM Standard</span>
+      </h1>
+      <button class="palette-trigger" onclick="openPalette()">
+        <span>🔍 Szukaj API lub akcji...</span>
+        <span class="kbd">Ctrl+K</span>
+      </button>
+    </header>
+
+    <div class="grid" id="menu-grid"></div>
+  </div>
+
+  <div id="palette-modal" onclick="if(event.target===this)closePalette()">
+    <div class="palette-box">
+      <input type="text" id="palette-search" class="palette-input" placeholder="Wpisz zapytanie NL lub nazwę akcji (np. 'udostępnij porty', 'logi', 'hui')..." oninput="filterPalette(this.value)">
+      <div class="palette-results" id="palette-results"></div>
+    </div>
+  </div>
+
+  <script>
+    const MENU_DATA = {
+  "schema": "wellmanifest.menu-tree/v1",
+  "version": "0.1.0",
+  "generatedAt": "2026-09-21T12:28:30Z",
+  "categories": [
+    {
+      "id": "widoki_pulpitu",
+      "title": "Widoki Pulpitu",
+      "icon": "message-square",
+      "order": 1,
+      "groups": [
+        {
+          "id": "nawigacja",
+          "title": "Nawigacja",
+          "items": [
+            {
+              "id": "menu_prepanel_views_chat",
+              "endpointId": "prepanel.views.chat",
+              "label": "Chat LLM & noVNC",
+              "description": "Interfejs czatu zintegrowany z podgl\u0105dem noVNC, logami i asystentem wykonawczym",
+              "icon": "message-square",
+              "order": 1,
+              "interactionType": "view_navigate",
+              "viewRoute": "/views/chat?host=nvidia&account=prototypowanie&novnc=loopback&port=6084",
+              "badge": "Primary",
+              "roles": [
+                "admin",
+                "dev",
+                "viewer"
+              ],
+              "samplePrompts": [],
+              "formSchema": null
+            },
+            {
+              "id": "menu_prepanel_views_host_novnc",
+              "endpointId": "prepanel.views.host_novnc",
+              "label": "Pe\u0142ny Pulpit noVNC",
+              "description": "Pe\u0142noekranowy pulpit kontenera ze skalowaniem i wirtualn\u0105 klawiatur\u0105",
+              "icon": "monitor",
+              "order": 2,
+              "interactionType": "view_navigate",
+              "viewRoute": "/views/host-novnc?host=nvidia&account=prototypowanie",
+              "badge": null,
+              "roles": [
+                "admin",
+                "dev"
+              ],
+              "samplePrompts": [],
+              "formSchema": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "to\u017csamo\u015b\u0107_i_dost\u0119p",
+      "title": "To\u017csamo\u015b\u0107 i Dost\u0119p",
+      "icon": "log-in",
+      "order": 5,
+      "groups": [
+        {
+          "id": "uwierzytelnianie",
+          "title": "Uwierzytelnianie",
+          "items": [
+            {
+              "id": "menu_app_auth_login",
+              "endpointId": "app.auth.login",
+              "label": "Zaloguj si\u0119",
+              "description": "Logowanie do panelu g\u0142\u00f3wnego platformy Clonerd",
+              "icon": "log-in",
+              "order": 5,
+              "interactionType": "modal_form",
+              "viewRoute": null,
+              "badge": null,
+              "roles": [
+                "admin",
+                "dev",
+                "viewer",
+                "guest"
+              ],
+              "samplePrompts": [],
+              "formSchema": {
+                "fields": [
+                  {
+                    "name": "email",
+                    "label": "Email",
+                    "type": "string",
+                    "required": true,
+                    "default": null,
+                    "options": [],
+                    "description": "Adres e-mail u\u017cytkownika"
+                  },
+                  {
+                    "name": "password",
+                    "label": "Password",
+                    "type": "string",
+                    "required": true,
+                    "default": null,
+                    "options": [],
+                    "description": "Has\u0142o dost\u0119pu"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "integracja_pc",
+      "title": "Integracja PC",
+      "icon": "share-2",
+      "order": 10,
+      "groups": [
+        {
+          "id": "port_forwarding",
+          "title": "Port Forwarding",
+          "items": [
+            {
+              "id": "menu_premesh_ports_share",
+              "endpointId": "premesh.ports.share",
+              "label": "Udost\u0119pnij porty PC Nvidia do noVNC",
+              "description": "Uruchamia port-forwarder wewn\u0105trz kontenera kieruj\u0105cy ruch do us\u0142ug na ho\u015bcie (np. 8100, 8096, 8094)",
+              "icon": "share-2",
+              "order": 10,
+              "interactionType": "modal_form",
+              "viewRoute": null,
+              "badge": "PC->noVNC",
+              "roles": [
+                "admin",
+                "dev"
+              ],
+              "samplePrompts": [
+                "udost\u0119pnij porty",
+                "wystaw porty do kontenera",
+                "share ports",
+                "forward host ports to novnc"
+              ],
+              "formSchema": {
+                "fields": [
+                  {
+                    "name": "account",
+                    "label": "Account",
+                    "type": "string",
+                    "required": true,
+                    "default": "prototypowanie",
+                    "options": [],
+                    "description": "Nazwa konta/kontenera"
+                  },
+                  {
+                    "name": "host",
+                    "label": "Host",
+                    "type": "string",
+                    "required": false,
+                    "default": "nvidia",
+                    "options": [],
+                    "description": "Host docelowy"
+                  },
+                  {
+                    "name": "ports",
+                    "label": "Ports",
+                    "type": "array",
+                    "required": false,
+                    "default": [
+                      8100,
+                      8096,
+                      8094
+                    ],
+                    "options": [],
+                    "description": "Lista port\u00f3w do udost\u0119pnienia z PC"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "diagnostyka",
+      "title": "Diagnostyka",
+      "icon": "file-text",
+      "order": 20,
+      "groups": [
+        {
+          "id": "logi",
+          "title": "Logi",
+          "items": [
+            {
+              "id": "menu_premesh_logs_fetch",
+              "endpointId": "premesh.logs.fetch",
+              "label": "Pobierz logi systemowe",
+              "description": "Zwraca ostatnie wiersze z aktywnych plik\u00f3w log\u00f3w wybranego hosta",
+              "icon": "file-text",
+              "order": 20,
+              "interactionType": "trigger",
+              "viewRoute": null,
+              "badge": null,
+              "roles": [
+                "admin",
+                "dev",
+                "viewer"
+              ],
+              "samplePrompts": [
+                "pobierz logi",
+                "poka\u017c logi systemowe",
+                "fetch logs",
+                "show system logs"
+              ],
+              "formSchema": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scenariusze_c2004",
+      "title": "Scenariusze C2004",
+      "icon": "play-circle",
+      "order": 30,
+      "groups": [
+        {
+          "id": "hui_&_oql",
+          "title": "HUI & OQL",
+          "items": [
+            {
+              "id": "menu_prepanel_scenarios_test_hui",
+              "endpointId": "prepanel.scenarios.test_hui",
+              "label": "Uruchom Test Manualny HUI",
+              "description": "Uruchamia test interfejsu HUI i warstw OQL pod adresem http://localhost:8100/connect-oql-system/test-hui w oknie noVNC",
+              "icon": "play-circle",
+              "order": 30,
+              "interactionType": "trigger",
+              "viewRoute": null,
+              "badge": "HUI",
+              "roles": [
+                "admin",
+                "dev"
+              ],
+              "samplePrompts": [
+                "uruchom test hui",
+                "test manualny hui",
+                "run test hui",
+                "start hui test in novnc"
+              ],
+              "formSchema": null
+            },
+            {
+              "id": "menu_prepanel_scenarios_connect_scenario",
+              "endpointId": "prepanel.scenarios.connect_scenario",
+              "label": "Edytor Connect-Scenario",
+              "description": "Otwiera edytor scenariuszy http://localhost:8100/connect-scenario w przegl\u0105darce noVNC",
+              "icon": "edit-3",
+              "order": 35,
+              "interactionType": "trigger",
+              "viewRoute": null,
+              "badge": "DAG",
+              "roles": [
+                "admin",
+                "dev"
+              ],
+              "samplePrompts": [
+                "uruchom connect scenario",
+                "otw\u00f3rz edytor scenariuszy",
+                "run connect scenario",
+                "open scenario editor"
+              ],
+              "formSchema": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "platforma_clonerd",
+      "title": "Platforma Clonerd",
+      "icon": "database",
+      "order": 40,
+      "groups": [
+        {
+          "id": "zasoby",
+          "title": "Zasoby",
+          "items": [
+            {
+              "id": "menu_app_records_list",
+              "endpointId": "app.records.list",
+              "label": "Rekordy i Dane",
+              "description": "Pobiera list\u0119 zsynchronizowanych rekord\u00f3w i artefakt\u00f3w",
+              "icon": "database",
+              "order": 40,
+              "interactionType": "view_navigate",
+              "viewRoute": "/#records",
+              "badge": null,
+              "roles": [
+                "admin",
+                "dev",
+                "viewer"
+              ],
+              "samplePrompts": [],
+              "formSchema": null
+            }
+          ]
+        },
+        {
+          "id": "plany_agent\u00f3w",
+          "title": "Plany Agent\u00f3w",
+          "items": [
+            {
+              "id": "menu_app_plans_execute",
+              "endpointId": "app.plans.execute",
+              "label": "Uruchom Plan Agenta",
+              "description": "Zleca asynchroniczne wykonanie planu operacyjnego",
+              "icon": "zap",
+              "order": 45,
+              "interactionType": "modal_form",
+              "viewRoute": null,
+              "badge": null,
+              "roles": [
+                "admin",
+                "dev"
+              ],
+              "samplePrompts": [],
+              "formSchema": {
+                "fields": [
+                  {
+                    "name": "plan_id",
+                    "label": "Plan Id",
+                    "type": "string",
+                    "required": true,
+                    "default": null,
+                    "options": [],
+                    "description": "Identyfikator planu operacyjnego"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "synchronizacja",
+      "title": "Synchronizacja",
+      "icon": "refresh-cw",
+      "order": 50,
+      "groups": [
+        {
+          "id": "replikacja",
+          "title": "Replikacja",
+          "items": [
+            {
+              "id": "menu_app_sync_run",
+              "endpointId": "app.sync.run",
+              "label": "Wymu\u015b synchronizacj\u0119 teraz",
+              "description": "Wymusza uruchomienie pe\u0142nego cyklu replikacji danych mi\u0119dzy hostem a chmur\u0105",
+              "icon": "refresh-cw",
+              "order": 50,
+              "interactionType": "trigger",
+              "viewRoute": null,
+              "badge": null,
+              "roles": [
+                "admin",
+                "dev"
+              ],
+              "samplePrompts": [
+                "uruchom synchronizacj\u0119",
+                "synchronizuj dane",
+                "run sync",
+                "synchronize platform data"
+              ],
+              "formSchema": null
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "searchIndex": [
+    {
+      "id": "menu_prepanel_views_chat",
+      "endpointId": "prepanel.views.chat",
+      "title": "Chat LLM & noVNC",
+      "description": "Interfejs czatu zintegrowany z podgl\u0105dem noVNC, logami i asystentem wykonawczym",
+      "category": "Widoki Pulpitu",
+      "group": "Nawigacja",
+      "icon": "message-square",
+      "interactionType": "view_navigate",
+      "viewRoute": "/views/chat?host=nvidia&account=prototypowanie&novnc=loopback&port=6084",
+      "keywords": [
+        "nawigacja",
+        "widoki pulpitu",
+        "prepanel.views.chat",
+        "chat llm & novnc",
+        "views",
+        "widok chat llm & novnc split",
+        "chat",
+        "llm"
+      ],
+      "prompts": []
+    },
+    {
+      "id": "menu_prepanel_views_host_novnc",
+      "endpointId": "prepanel.views.host_novnc",
+      "title": "Pe\u0142ny Pulpit noVNC",
+      "description": "Pe\u0142noekranowy pulpit kontenera ze skalowaniem i wirtualn\u0105 klawiatur\u0105",
+      "category": "Widoki Pulpitu",
+      "group": "Nawigacja",
+      "icon": "monitor",
+      "interactionType": "view_navigate",
+      "viewRoute": "/views/host-novnc?host=nvidia&account=prototypowanie",
+      "keywords": [
+        "nawigacja",
+        "widoki pulpitu",
+        "pe\u0142ny pulpit novnc",
+        "prepanel.views.host_novnc",
+        "widok host novnc fullscreen",
+        "views",
+        "novnc",
+        "desktop"
+      ],
+      "prompts": []
+    },
+    {
+      "id": "menu_app_auth_login",
+      "endpointId": "app.auth.login",
+      "title": "Zaloguj si\u0119",
+      "description": "Logowanie do panelu g\u0142\u00f3wnego platformy Clonerd",
+      "category": "To\u017csamo\u015b\u0107 i Dost\u0119p",
+      "group": "Uwierzytelnianie",
+      "icon": "log-in",
+      "interactionType": "modal_form",
+      "viewRoute": null,
+      "keywords": [
+        "uwierzytelnianie",
+        "password",
+        "app.auth.login",
+        "uwierzytelnienie u\u017cytkownika",
+        "identity",
+        "to\u017csamo\u015b\u0107 i dost\u0119p",
+        "email",
+        "auth",
+        "zaloguj si\u0119"
+      ],
+      "prompts": []
+    },
+    {
+      "id": "menu_premesh_ports_share",
+      "endpointId": "premesh.ports.share",
+      "title": "Udost\u0119pnij porty PC Nvidia do noVNC",
+      "description": "Uruchamia port-forwarder wewn\u0105trz kontenera kieruj\u0105cy ruch do us\u0142ug na ho\u015bcie (np. 8100, 8096, 8094)",
+      "category": "Integracja PC",
+      "group": "Port Forwarding",
+      "icon": "share-2",
+      "interactionType": "modal_form",
+      "viewRoute": null,
+      "keywords": [
+        "integracja pc",
+        "premesh.ports.share",
+        "port forwarding",
+        "host",
+        "ports",
+        "nvidia",
+        "network",
+        "novnc",
+        "udost\u0119pnij porty pc nvidia do novnc",
+        "account",
+        "udost\u0119pnianie port\u00f3w hosta do kontenera"
+      ],
+      "prompts": [
+        "udost\u0119pnij porty",
+        "wystaw porty do kontenera",
+        "share ports",
+        "forward host ports to novnc"
+      ]
+    },
+    {
+      "id": "menu_premesh_logs_fetch",
+      "endpointId": "premesh.logs.fetch",
+      "title": "Pobierz logi systemowe",
+      "description": "Zwraca ostatnie wiersze z aktywnych plik\u00f3w log\u00f3w wybranego hosta",
+      "category": "Diagnostyka",
+      "group": "Logi",
+      "icon": "file-text",
+      "interactionType": "trigger",
+      "viewRoute": null,
+      "keywords": [
+        "pobranie log\u00f3w systemowych",
+        "logs",
+        "diagnostics",
+        "host",
+        "audit",
+        "lines",
+        "logi",
+        "diagnostyka",
+        "pobierz logi systemowe",
+        "premesh.logs.fetch"
+      ],
+      "prompts": [
+        "pobierz logi",
+        "poka\u017c logi systemowe",
+        "fetch logs",
+        "show system logs"
+      ]
+    },
+    {
+      "id": "menu_prepanel_scenarios_test_hui",
+      "endpointId": "prepanel.scenarios.test_hui",
+      "title": "Uruchom Test Manualny HUI",
+      "description": "Uruchamia test interfejsu HUI i warstw OQL pod adresem http://localhost:8100/connect-oql-system/test-hui w oknie noVNC",
+      "category": "Scenariusze C2004",
+      "group": "HUI & OQL",
+      "icon": "play-circle",
+      "interactionType": "trigger",
+      "viewRoute": null,
+      "keywords": [
+        "scenariusz test manualny hui",
+        "hui",
+        "c2004",
+        "host",
+        "hui & oql",
+        "prepanel.scenarios.test_hui",
+        "novnc",
+        "uruchom test manualny hui",
+        "account",
+        "scenario",
+        "scenariusze c2004"
+      ],
+      "prompts": [
+        "uruchom test hui",
+        "test manualny hui",
+        "run test hui",
+        "start hui test in novnc"
+      ]
+    },
+    {
+      "id": "menu_prepanel_scenarios_connect_scenario",
+      "endpointId": "prepanel.scenarios.connect_scenario",
+      "title": "Edytor Connect-Scenario",
+      "description": "Otwiera edytor scenariuszy http://localhost:8100/connect-scenario w przegl\u0105darce noVNC",
+      "category": "Scenariusze C2004",
+      "group": "HUI & OQL",
+      "icon": "edit-3",
+      "interactionType": "trigger",
+      "viewRoute": null,
+      "keywords": [
+        "prepanel.scenarios.connect_scenario",
+        "scenariusz connect-scenario (edytor)",
+        "connect-scenario",
+        "c2004",
+        "hui & oql",
+        "account",
+        "edytor connect-scenario",
+        "scenario",
+        "scenariusze c2004"
+      ],
+      "prompts": [
+        "uruchom connect scenario",
+        "otw\u00f3rz edytor scenariuszy",
+        "run connect scenario",
+        "open scenario editor"
+      ]
+    },
+    {
+      "id": "menu_app_records_list",
+      "endpointId": "app.records.list",
+      "title": "Rekordy i Dane",
+      "description": "Pobiera list\u0119 zsynchronizowanych rekord\u00f3w i artefakt\u00f3w",
+      "category": "Platforma Clonerd",
+      "group": "Zasoby",
+      "icon": "database",
+      "interactionType": "view_navigate",
+      "viewRoute": "/#records",
+      "keywords": [
+        "platforma clonerd",
+        "data",
+        "zasoby",
+        "app.records.list",
+        "katalog rekord\u00f3w danych",
+        "rekordy i dane",
+        "records"
+      ],
+      "prompts": []
+    },
+    {
+      "id": "menu_app_plans_execute",
+      "endpointId": "app.plans.execute",
+      "title": "Uruchom Plan Agenta",
+      "description": "Zleca asynchroniczne wykonanie planu operacyjnego",
+      "category": "Platforma Clonerd",
+      "group": "Plany Agent\u00f3w",
+      "icon": "zap",
+      "interactionType": "modal_form",
+      "viewRoute": null,
+      "keywords": [
+        "plan_id",
+        "platforma clonerd",
+        "agents",
+        "wykonanie planu agenta",
+        "app.plans.execute",
+        "plans",
+        "uruchom plan agenta",
+        "plany agent\u00f3w",
+        "execution"
+      ],
+      "prompts": []
+    },
+    {
+      "id": "menu_app_sync_run",
+      "endpointId": "app.sync.run",
+      "title": "Wymu\u015b synchronizacj\u0119 teraz",
+      "description": "Wymusza uruchomienie pe\u0142nego cyklu replikacji danych mi\u0119dzy hostem a chmur\u0105",
+      "category": "Synchronizacja",
+      "group": "Replikacja",
+      "icon": "refresh-cw",
+      "interactionType": "trigger",
+      "viewRoute": null,
+      "keywords": [
+        "app.sync.run",
+        "replication",
+        "synchronizacja dwukierunkowa",
+        "wymu\u015b synchronizacj\u0119 teraz",
+        "synchronizacja",
+        "sync",
+        "replikacja"
+      ],
+      "prompts": [
+        "uruchom synchronizacj\u0119",
+        "synchronizuj dane",
+        "run sync",
+        "synchronize platform data"
+      ]
+    }
+  ]
+};
+
+    function renderMenu() {
+      const grid = document.getElementById('menu-grid');
+      grid.innerHTML = '';
+      MENU_DATA.categories.forEach(cat => {
+        const card = document.createElement('div');
+        card.className = 'category-card';
+        let groupsHtml = '';
+        cat.groups.forEach(grp => {
+          groupsHtml += `<div class="group-title">${grp.title}</div>`;
+          grp.items.forEach(item => {
+            const badge = item.badge ? `<span class="item-badge">${item.badge}</span>` : '';
+            groupsHtml += `
+              <div class="menu-item" onclick="handleItemClick('${item.endpointId}', '${item.interactionType}', '${item.viewRoute || ''}')">
+                <div>
+                  <div class="item-label">${item.label}</div>
+                  <div class="item-desc">${item.description}</div>
+                </div>
+                ${badge}
+              </div>
+            `;
+          });
+        });
+        card.innerHTML = `<div class="category-title">📁 ${cat.title}</div>${groupsHtml}`;
+        grid.appendChild(card);
+      });
+    }
+
+    function openPalette() {
+      document.getElementById('palette-modal').classList.add('active');
+      const input = document.getElementById('palette-search');
+      input.value = '';
+      input.focus();
+      filterPalette('');
+    }
+
+    function closePalette() {
+      document.getElementById('palette-modal').classList.remove('active');
+    }
+
+    function filterPalette(q) {
+      const qNorm = q.trim().toLowerCase();
+      const resultsDiv = document.getElementById('palette-results');
+      resultsDiv.innerHTML = '';
+      const matches = MENU_DATA.searchIndex.filter(item => {
+        if (!qNorm) return true;
+        return item.title.toLowerCase().includes(qNorm) ||
+               item.description.toLowerCase().includes(qNorm) ||
+               item.category.toLowerCase().includes(qNorm) ||
+               item.keywords.some(k => k.toLowerCase().includes(qNorm)) ||
+               (item.prompts && item.prompts.some(p => p.toLowerCase().includes(qNorm)));
+      });
+
+      if (matches.length === 0) {
+        resultsDiv.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--text-muted);">Brak wyników dla zapytania.</div>';
+        return;
+      }
+
+      matches.slice(0, 15).forEach(m => {
+        const div = document.createElement('div');
+        div.className = 'palette-item';
+        let chipsHtml = '';
+        if (m.prompts) {
+          chipsHtml = m.prompts.map(p => `<span class="prompt-chip" onclick="event.stopPropagation(); executePrompt('${p}')">${p}</span>`).join('');
+        }
+        div.innerHTML = `
+          <div>
+            <div style="font-size: 13px; font-weight: 500;">${m.title} <span style="font-size: 11px; color: var(--text-muted);">[${m.category}]</span></div>
+            <div style="font-size: 11px; color: var(--text-muted);">${m.description}</div>
+            ${chipsHtml ? `<div style="margin-top: 4px;">${chipsHtml}</div>` : ''}
+          </div>
+          <span class="item-badge">${m.interactionType}</span>
+        `;
+        div.onclick = () => {
+          closePalette();
+          handleItemClick(m.endpointId, m.interactionType, m.viewRoute || '');
+        };
+        resultsDiv.appendChild(div);
+      });
+    }
+
+    function handleItemClick(endpointId, interactionType, viewRoute) {
+      alert(`[NL-API-LLM Dispatch]
+Endpoint: ${endpointId}
+Typ: ${interactionType}
+Route: ${viewRoute || 'direct API execution'}`);
+    }
+
+    function executePrompt(promptText) {
+      closePalette();
+      alert(`[NL Fast-Path Query]
+Tekst: "${promptText}"
+Kierowanie do planera zapytań NL-API-LLM...`);
+    }
+
+    window.addEventListener('keydown', e => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        openPalette();
+      }
+      if (e.key === 'Escape') {
+        closePalette();
+      }
+    });
+
+    renderMenu();
+  </script>
+</body>
+</html>

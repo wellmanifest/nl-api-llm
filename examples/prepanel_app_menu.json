@@ -1,0 +1,634 @@
+{
+  "schema": "wellmanifest.menu-tree/v1",
+  "version": "0.1.0",
+  "generatedAt": "2026-09-21T12:28:30Z",
+  "categories": [
+    {
+      "id": "widoki_pulpitu",
+      "title": "Widoki Pulpitu",
+      "icon": "message-square",
+      "order": 1,
+      "groups": [
+        {
+          "id": "nawigacja",
+          "title": "Nawigacja",
+          "items": [
+            {
+              "id": "menu_prepanel_views_chat",
+              "endpointId": "prepanel.views.chat",
+              "label": "Chat LLM & noVNC",
+              "description": "Interfejs czatu zintegrowany z podglądem noVNC, logami i asystentem wykonawczym",
+              "icon": "message-square",
+              "order": 1,
+              "interactionType": "view_navigate",
+              "viewRoute": "/views/chat?host=nvidia&account=prototypowanie&novnc=loopback&port=6084",
+              "badge": "Primary",
+              "roles": [
+                "admin",
+                "dev",
+                "viewer"
+              ],
+              "samplePrompts": [],
+              "formSchema": null
+            },
+            {
+              "id": "menu_prepanel_views_host_novnc",
+              "endpointId": "prepanel.views.host_novnc",
+              "label": "Pełny Pulpit noVNC",
+              "description": "Pełnoekranowy pulpit kontenera ze skalowaniem i wirtualną klawiaturą",
+              "icon": "monitor",
+              "order": 2,
+              "interactionType": "view_navigate",
+              "viewRoute": "/views/host-novnc?host=nvidia&account=prototypowanie",
+              "badge": null,
+              "roles": [
+                "admin",
+                "dev"
+              ],
+              "samplePrompts": [],
+              "formSchema": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "tożsamość_i_dostęp",
+      "title": "Tożsamość i Dostęp",
+      "icon": "log-in",
+      "order": 5,
+      "groups": [
+        {
+          "id": "uwierzytelnianie",
+          "title": "Uwierzytelnianie",
+          "items": [
+            {
+              "id": "menu_app_auth_login",
+              "endpointId": "app.auth.login",
+              "label": "Zaloguj się",
+              "description": "Logowanie do panelu głównego platformy Clonerd",
+              "icon": "log-in",
+              "order": 5,
+              "interactionType": "modal_form",
+              "viewRoute": null,
+              "badge": null,
+              "roles": [
+                "admin",
+                "dev",
+                "viewer",
+                "guest"
+              ],
+              "samplePrompts": [],
+              "formSchema": {
+                "fields": [
+                  {
+                    "name": "email",
+                    "label": "Email",
+                    "type": "string",
+                    "required": true,
+                    "default": null,
+                    "options": [],
+                    "description": "Adres e-mail użytkownika"
+                  },
+                  {
+                    "name": "password",
+                    "label": "Password",
+                    "type": "string",
+                    "required": true,
+                    "default": null,
+                    "options": [],
+                    "description": "Hasło dostępu"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "integracja_pc",
+      "title": "Integracja PC",
+      "icon": "share-2",
+      "order": 10,
+      "groups": [
+        {
+          "id": "port_forwarding",
+          "title": "Port Forwarding",
+          "items": [
+            {
+              "id": "menu_premesh_ports_share",
+              "endpointId": "premesh.ports.share",
+              "label": "Udostępnij porty PC Nvidia do noVNC",
+              "description": "Uruchamia port-forwarder wewnątrz kontenera kierujący ruch do usług na hoście (np. 8100, 8096, 8094)",
+              "icon": "share-2",
+              "order": 10,
+              "interactionType": "modal_form",
+              "viewRoute": null,
+              "badge": "PC->noVNC",
+              "roles": [
+                "admin",
+                "dev"
+              ],
+              "samplePrompts": [
+                "udostępnij porty",
+                "wystaw porty do kontenera",
+                "share ports",
+                "forward host ports to novnc"
+              ],
+              "formSchema": {
+                "fields": [
+                  {
+                    "name": "account",
+                    "label": "Account",
+                    "type": "string",
+                    "required": true,
+                    "default": "prototypowanie",
+                    "options": [],
+                    "description": "Nazwa konta/kontenera"
+                  },
+                  {
+                    "name": "host",
+                    "label": "Host",
+                    "type": "string",
+                    "required": false,
+                    "default": "nvidia",
+                    "options": [],
+                    "description": "Host docelowy"
+                  },
+                  {
+                    "name": "ports",
+                    "label": "Ports",
+                    "type": "array",
+                    "required": false,
+                    "default": [
+                      8100,
+                      8096,
+                      8094
+                    ],
+                    "options": [],
+                    "description": "Lista portów do udostępnienia z PC"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "diagnostyka",
+      "title": "Diagnostyka",
+      "icon": "file-text",
+      "order": 20,
+      "groups": [
+        {
+          "id": "logi",
+          "title": "Logi",
+          "items": [
+            {
+              "id": "menu_premesh_logs_fetch",
+              "endpointId": "premesh.logs.fetch",
+              "label": "Pobierz logi systemowe",
+              "description": "Zwraca ostatnie wiersze z aktywnych plików logów wybranego hosta",
+              "icon": "file-text",
+              "order": 20,
+              "interactionType": "trigger",
+              "viewRoute": null,
+              "badge": null,
+              "roles": [
+                "admin",
+                "dev",
+                "viewer"
+              ],
+              "samplePrompts": [
+                "pobierz logi",
+                "pokaż logi systemowe",
+                "fetch logs",
+                "show system logs"
+              ],
+              "formSchema": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scenariusze_c2004",
+      "title": "Scenariusze C2004",
+      "icon": "play-circle",
+      "order": 30,
+      "groups": [
+        {
+          "id": "hui_&_oql",
+          "title": "HUI & OQL",
+          "items": [
+            {
+              "id": "menu_prepanel_scenarios_test_hui",
+              "endpointId": "prepanel.scenarios.test_hui",
+              "label": "Uruchom Test Manualny HUI",
+              "description": "Uruchamia test interfejsu HUI i warstw OQL pod adresem http://localhost:8100/connect-oql-system/test-hui w oknie noVNC",
+              "icon": "play-circle",
+              "order": 30,
+              "interactionType": "trigger",
+              "viewRoute": null,
+              "badge": "HUI",
+              "roles": [
+                "admin",
+                "dev"
+              ],
+              "samplePrompts": [
+                "uruchom test hui",
+                "test manualny hui",
+                "run test hui",
+                "start hui test in novnc"
+              ],
+              "formSchema": null
+            },
+            {
+              "id": "menu_prepanel_scenarios_connect_scenario",
+              "endpointId": "prepanel.scenarios.connect_scenario",
+              "label": "Edytor Connect-Scenario",
+              "description": "Otwiera edytor scenariuszy http://localhost:8100/connect-scenario w przeglądarce noVNC",
+              "icon": "edit-3",
+              "order": 35,
+              "interactionType": "trigger",
+              "viewRoute": null,
+              "badge": "DAG",
+              "roles": [
+                "admin",
+                "dev"
+              ],
+              "samplePrompts": [
+                "uruchom connect scenario",
+                "otwórz edytor scenariuszy",
+                "run connect scenario",
+                "open scenario editor"
+              ],
+              "formSchema": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "platforma_clonerd",
+      "title": "Platforma Clonerd",
+      "icon": "database",
+      "order": 40,
+      "groups": [
+        {
+          "id": "zasoby",
+          "title": "Zasoby",
+          "items": [
+            {
+              "id": "menu_app_records_list",
+              "endpointId": "app.records.list",
+              "label": "Rekordy i Dane",
+              "description": "Pobiera listę zsynchronizowanych rekordów i artefaktów",
+              "icon": "database",
+              "order": 40,
+              "interactionType": "view_navigate",
+              "viewRoute": "/#records",
+              "badge": null,
+              "roles": [
+                "admin",
+                "dev",
+                "viewer"
+              ],
+              "samplePrompts": [],
+              "formSchema": null
+            }
+          ]
+        },
+        {
+          "id": "plany_agentów",
+          "title": "Plany Agentów",
+          "items": [
+            {
+              "id": "menu_app_plans_execute",
+              "endpointId": "app.plans.execute",
+              "label": "Uruchom Plan Agenta",
+              "description": "Zleca asynchroniczne wykonanie planu operacyjnego",
+              "icon": "zap",
+              "order": 45,
+              "interactionType": "modal_form",
+              "viewRoute": null,
+              "badge": null,
+              "roles": [
+                "admin",
+                "dev"
+              ],
+              "samplePrompts": [],
+              "formSchema": {
+                "fields": [
+                  {
+                    "name": "plan_id",
+                    "label": "Plan Id",
+                    "type": "string",
+                    "required": true,
+                    "default": null,
+                    "options": [],
+                    "description": "Identyfikator planu operacyjnego"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "synchronizacja",
+      "title": "Synchronizacja",
+      "icon": "refresh-cw",
+      "order": 50,
+      "groups": [
+        {
+          "id": "replikacja",
+          "title": "Replikacja",
+          "items": [
+            {
+              "id": "menu_app_sync_run",
+              "endpointId": "app.sync.run",
+              "label": "Wymuś synchronizację teraz",
+              "description": "Wymusza uruchomienie pełnego cyklu replikacji danych między hostem a chmurą",
+              "icon": "refresh-cw",
+              "order": 50,
+              "interactionType": "trigger",
+              "viewRoute": null,
+              "badge": null,
+              "roles": [
+                "admin",
+                "dev"
+              ],
+              "samplePrompts": [
+                "uruchom synchronizację",
+                "synchronizuj dane",
+                "run sync",
+                "synchronize platform data"
+              ],
+              "formSchema": null
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "searchIndex": [
+    {
+      "id": "menu_prepanel_views_chat",
+      "endpointId": "prepanel.views.chat",
+      "title": "Chat LLM & noVNC",
+      "description": "Interfejs czatu zintegrowany z podglądem noVNC, logami i asystentem wykonawczym",
+      "category": "Widoki Pulpitu",
+      "group": "Nawigacja",
+      "icon": "message-square",
+      "interactionType": "view_navigate",
+      "viewRoute": "/views/chat?host=nvidia&account=prototypowanie&novnc=loopback&port=6084",
+      "keywords": [
+        "nawigacja",
+        "widoki pulpitu",
+        "prepanel.views.chat",
+        "chat llm & novnc",
+        "views",
+        "widok chat llm & novnc split",
+        "chat",
+        "llm"
+      ],
+      "prompts": []
+    },
+    {
+      "id": "menu_prepanel_views_host_novnc",
+      "endpointId": "prepanel.views.host_novnc",
+      "title": "Pełny Pulpit noVNC",
+      "description": "Pełnoekranowy pulpit kontenera ze skalowaniem i wirtualną klawiaturą",
+      "category": "Widoki Pulpitu",
+      "group": "Nawigacja",
+      "icon": "monitor",
+      "interactionType": "view_navigate",
+      "viewRoute": "/views/host-novnc?host=nvidia&account=prototypowanie",
+      "keywords": [
+        "nawigacja",
+        "widoki pulpitu",
+        "pełny pulpit novnc",
+        "prepanel.views.host_novnc",
+        "widok host novnc fullscreen",
+        "views",
+        "novnc",
+        "desktop"
+      ],
+      "prompts": []
+    },
+    {
+      "id": "menu_app_auth_login",
+      "endpointId": "app.auth.login",
+      "title": "Zaloguj się",
+      "description": "Logowanie do panelu głównego platformy Clonerd",
+      "category": "Tożsamość i Dostęp",
+      "group": "Uwierzytelnianie",
+      "icon": "log-in",
+      "interactionType": "modal_form",
+      "viewRoute": null,
+      "keywords": [
+        "uwierzytelnianie",
+        "password",
+        "app.auth.login",
+        "uwierzytelnienie użytkownika",
+        "identity",
+        "tożsamość i dostęp",
+        "email",
+        "auth",
+        "zaloguj się"
+      ],
+      "prompts": []
+    },
+    {
+      "id": "menu_premesh_ports_share",
+      "endpointId": "premesh.ports.share",
+      "title": "Udostępnij porty PC Nvidia do noVNC",
+      "description": "Uruchamia port-forwarder wewnątrz kontenera kierujący ruch do usług na hoście (np. 8100, 8096, 8094)",
+      "category": "Integracja PC",
+      "group": "Port Forwarding",
+      "icon": "share-2",
+      "interactionType": "modal_form",
+      "viewRoute": null,
+      "keywords": [
+        "integracja pc",
+        "premesh.ports.share",
+        "port forwarding",
+        "host",
+        "ports",
+        "nvidia",
+        "network",
+        "novnc",
+        "udostępnij porty pc nvidia do novnc",
+        "account",
+        "udostępnianie portów hosta do kontenera"
+      ],
+      "prompts": [
+        "udostępnij porty",
+        "wystaw porty do kontenera",
+        "share ports",
+        "forward host ports to novnc"
+      ]
+    },
+    {
+      "id": "menu_premesh_logs_fetch",
+      "endpointId": "premesh.logs.fetch",
+      "title": "Pobierz logi systemowe",
+      "description": "Zwraca ostatnie wiersze z aktywnych plików logów wybranego hosta",
+      "category": "Diagnostyka",
+      "group": "Logi",
+      "icon": "file-text",
+      "interactionType": "trigger",
+      "viewRoute": null,
+      "keywords": [
+        "pobranie logów systemowych",
+        "logs",
+        "diagnostics",
+        "host",
+        "audit",
+        "lines",
+        "logi",
+        "diagnostyka",
+        "pobierz logi systemowe",
+        "premesh.logs.fetch"
+      ],
+      "prompts": [
+        "pobierz logi",
+        "pokaż logi systemowe",
+        "fetch logs",
+        "show system logs"
+      ]
+    },
+    {
+      "id": "menu_prepanel_scenarios_test_hui",
+      "endpointId": "prepanel.scenarios.test_hui",
+      "title": "Uruchom Test Manualny HUI",
+      "description": "Uruchamia test interfejsu HUI i warstw OQL pod adresem http://localhost:8100/connect-oql-system/test-hui w oknie noVNC",
+      "category": "Scenariusze C2004",
+      "group": "HUI & OQL",
+      "icon": "play-circle",
+      "interactionType": "trigger",
+      "viewRoute": null,
+      "keywords": [
+        "scenariusz test manualny hui",
+        "hui",
+        "c2004",
+        "host",
+        "hui & oql",
+        "prepanel.scenarios.test_hui",
+        "novnc",
+        "uruchom test manualny hui",
+        "account",
+        "scenario",
+        "scenariusze c2004"
+      ],
+      "prompts": [
+        "uruchom test hui",
+        "test manualny hui",
+        "run test hui",
+        "start hui test in novnc"
+      ]
+    },
+    {
+      "id": "menu_prepanel_scenarios_connect_scenario",
+      "endpointId": "prepanel.scenarios.connect_scenario",
+      "title": "Edytor Connect-Scenario",
+      "description": "Otwiera edytor scenariuszy http://localhost:8100/connect-scenario w przeglądarce noVNC",
+      "category": "Scenariusze C2004",
+      "group": "HUI & OQL",
+      "icon": "edit-3",
+      "interactionType": "trigger",
+      "viewRoute": null,
+      "keywords": [
+        "prepanel.scenarios.connect_scenario",
+        "scenariusz connect-scenario (edytor)",
+        "connect-scenario",
+        "c2004",
+        "hui & oql",
+        "account",
+        "edytor connect-scenario",
+        "scenario",
+        "scenariusze c2004"
+      ],
+      "prompts": [
+        "uruchom connect scenario",
+        "otwórz edytor scenariuszy",
+        "run connect scenario",
+        "open scenario editor"
+      ]
+    },
+    {
+      "id": "menu_app_records_list",
+      "endpointId": "app.records.list",
+      "title": "Rekordy i Dane",
+      "description": "Pobiera listę zsynchronizowanych rekordów i artefaktów",
+      "category": "Platforma Clonerd",
+      "group": "Zasoby",
+      "icon": "database",
+      "interactionType": "view_navigate",
+      "viewRoute": "/#records",
+      "keywords": [
+        "platforma clonerd",
+        "data",
+        "zasoby",
+        "app.records.list",
+        "katalog rekordów danych",
+        "rekordy i dane",
+        "records"
+      ],
+      "prompts": []
+    },
+    {
+      "id": "menu_app_plans_execute",
+      "endpointId": "app.plans.execute",
+      "title": "Uruchom Plan Agenta",
+      "description": "Zleca asynchroniczne wykonanie planu operacyjnego",
+      "category": "Platforma Clonerd",
+      "group": "Plany Agentów",
+      "icon": "zap",
+      "interactionType": "modal_form",
+      "viewRoute": null,
+      "keywords": [
+        "plan_id",
+        "platforma clonerd",
+        "agents",
+        "wykonanie planu agenta",
+        "app.plans.execute",
+        "plans",
+        "uruchom plan agenta",
+        "plany agentów",
+        "execution"
+      ],
+      "prompts": []
+    },
+    {
+      "id": "menu_app_sync_run",
+      "endpointId": "app.sync.run",
+      "title": "Wymuś synchronizację teraz",
+      "description": "Wymusza uruchomienie pełnego cyklu replikacji danych między hostem a chmurą",
+      "category": "Synchronizacja",
+      "group": "Replikacja",
+      "icon": "refresh-cw",
+      "interactionType": "trigger",
+      "viewRoute": null,
+      "keywords": [
+        "app.sync.run",
+        "replication",
+        "synchronizacja dwukierunkowa",
+        "wymuś synchronizację teraz",
+        "synchronizacja",
+        "sync",
+        "replikacja"
+      ],
+      "prompts": [
+        "uruchom synchronizację",
+        "synchronizuj dane",
+        "run sync",
+        "synchronize platform data"
+      ]
+    }
+  ]
+}

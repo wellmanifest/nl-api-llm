@@ -1,0 +1,122 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wellmanifest.com/schemas/nl-api-llm/menu-tree.schema.json",
+  "title": "MenuTree",
+  "description": "Normative schema for the generated frontend menu tree and command palette",
+  "type": "object",
+  "required": ["schema", "version", "categories", "searchIndex"],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "wellmanifest.menu-tree/v1"
+    },
+    "version": {
+      "type": "string"
+    },
+    "generatedAt": {
+      "type": "string"
+    },
+    "categories": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "title", "groups"],
+        "properties": {
+          "id": { "type": "string" },
+          "title": { "type": "string" },
+          "icon": { "type": "string" },
+          "order": { "type": "integer" },
+          "groups": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["id", "title", "items"],
+              "properties": {
+                "id": { "type": "string" },
+                "title": { "type": "string" },
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": ["id", "label", "interactionType"],
+                    "properties": {
+                      "id": { "type": "string" },
+                      "endpointId": { "type": "string" },
+                      "label": { "type": "string" },
+                      "description": { "type": "string" },
+                      "icon": { "type": "string" },
+                      "order": { "type": "integer" },
+                      "shortcut": { "type": "string" },
+                      "interactionType": {
+                        "type": "string",
+                        "enum": ["trigger", "modal_form", "view_navigate", "tab_open"]
+                      },
+                      "viewRoute": { "type": "string" },
+                      "badge": { "type": "string" },
+                      "roles": {
+                        "type": "array",
+                        "items": { "type": "string" }
+                      },
+                      "samplePrompts": {
+                        "type": "array",
+                        "items": { "type": "string" }
+                      },
+                      "formSchema": {
+                        "type": "object",
+                        "properties": {
+                          "fields": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "required": ["name", "label", "type", "required"],
+                              "properties": {
+                                "name": { "type": "string" },
+                                "label": { "type": "string" },
+                                "type": { "type": "string" },
+                                "required": { "type": "boolean" },
+                                "default": {},
+                                "options": {
+                                  "type": "array"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "searchIndex": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "title", "category", "interactionType", "keywords"],
+        "properties": {
+          "id": { "type": "string" },
+          "endpointId": { "type": "string" },
+          "title": { "type": "string" },
+          "description": { "type": "string" },
+          "category": { "type": "string" },
+          "group": { "type": "string" },
+          "icon": { "type": "string" },
+          "interactionType": { "type": "string" },
+          "viewRoute": { "type": "string" },
+          "keywords": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "prompts": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      }
+    }
+  }
+}

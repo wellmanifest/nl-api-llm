@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wellmanifest.com/schemas/nl-api-llm/nl-api-query.schema.json",
+  "title": "NlApiQuery",
+  "description": "Schema for incoming natural language queries and compiled execution plans",
+  "type": "object",
+  "required": ["query", "sessionId"],
+  "properties": {
+    "query": { "type": "string" },
+    "sessionId": { "type": "string" },
+    "lang": { "type": "string", "enum": ["auto", "pl", "en"], "default": "auto" },
+    "context": {
+      "type": "object",
+      "properties": {
+        "activeHost": { "type": "string" },
+        "activeAccount": { "type": "string" },
+        "activeRole": { "type": "string" },
+        "activeView": { "type": "string" }
+      }
+    },
+    "plan": {
+      "type": "object",
+      "properties": {
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "strategy": { "type": "string", "enum": ["deterministic", "llm"] },
+        "actions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["endpointId", "parameters"],
+            "properties": {
+              "endpointId": { "type": "string" },
+              "parameters": { "type": "object" },
+              "description": { "type": "string" }
+            }
+          }
+        }
+      }
+    }
+  }
+}
