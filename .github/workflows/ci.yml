@@ -22,11 +22,9 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install pydantic pytest jsonschema
-      - name: Activate managed repository hooks
-        run: bash infra/ci-bootstrap.sh
       - name: Governance check
         run: |
-          ./project/governance-check.sh
+          bash infra/ci-bootstrap.sh ./project/governance-check.sh
       - name: Run test suite
         run: |
-          pytest
+          bash infra/ci-bootstrap.sh python -m pytest
