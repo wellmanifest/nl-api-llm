@@ -1,0 +1,76 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-004",
+  "summary": "Activate managed hooks in hosted CI",
+  "workstream": "infrastructure",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P2",
+    "origin": "requested"
+  },
+  "allowedPaths": [
+    "project/ticket-004/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    ".github/workflows/ci.yml",
+    "infra/ci-bootstrap.sh"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "8561b24afe5cd574369bc88d45dde7ab98a4f470",
+    "targetBranch": "main",
+    "outcome": "Hosted CI installs the repository-declared hook before governed checks.",
+    "nonGoals": [
+      "No model performance guarantee or mandatory vendor.",
+      "No mutation of other active tickets or execution authority derived from model output."
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 15,
+    "budgets": {
+      "maxImplementationFiles": 2,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Use a checked-in CI bootstrap that activates existing managed hooks; retain every governance check.",
+      "components": [
+        {
+          "name": "hosted-ci",
+          "paths": [
+            ".github/workflows/ci.yml",
+            "infra/ci-bootstrap.sh"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert only this ticket commit."
+    },
+    "runtimeDependencies": [],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "bash infra/ci-bootstrap.sh",
+          "./project/governance-check.sh",
+          "python3 -B -m pytest -o pythonpath=. -p no:cacheprovider"
+        ],
+        "evidence": "Governance and standard tests pass with managed hooks activated."
+      }
+    ]
+  }
+}
