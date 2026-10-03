@@ -254,3 +254,49 @@ def test_html_component_export(sample_registry: ApiRegistry):
     assert "NL-API-LLM Standard" in html
     assert "Ctrl+K" in html
     assert "premesh.ports.share" in html
+
+
+def test_menu_binding_dual_naming_and_result_envelope():
+    # Verify snake_case menu_binding parsing
+    raw_data = {
+        "schema": "wellmanifest.api-registry/v1",
+        "version": "0.1.0",
+        "services": [{"id": "svc", "name": "Service", "protocol": "rest"}],
+        "endpoints": [
+            {
+                "id": "svc.action",
+                "service": "svc",
+                "protocol": "rest",
+                "title": "Action",
+                "menu_binding": {
+                    "category": "work",
+                    "group": "Tools",
+                    "label": "Execute Action",
+                    "view_route": "/work/action",
+                    "interaction_type": "view_navigate",
+                    "order": 5,
+                },
+            }
+        ],
+    }
+
+    registry = ApiRegistry.from_dict(raw_data)
+    ep = registry.endpoints[0]
+    assert ep.menuBinding is not None
+    assert ep.menuBinding.category == "work"
+    assert ep.menuBinding.viewRoute == "/work/action"
+    assert ep.menuBinding.interactionType == "view_navigate"
+
+    # Verify result envelope harmonization
+    orchestrator = ApiOrchestrator(registry, mock_mode=True)
+    _, results = orchestrator.query("pobierz", caller_role="admin")
+    if results:
+        res = results[0]
+        res_dict = res.to_dict()
+        assert "status" in res_dict
+        assert res_dict["status"] in ("success", "error")
+        assert "errors" in res_dict
+        assert isinstance(res_dict["errors"], list)
+        assert "meta" in res_dict
+        assert isinstance(res_dict["meta"], dict)
+

@@ -178,16 +178,17 @@ class ApiRegistry:
             ]
 
             menu_binding = None
-            if "menuBinding" in e and e["menuBinding"]:
-                mb = e["menuBinding"]
+            raw_mb = e.get("menuBinding") or e.get("menu_binding")
+            if raw_mb:
+                mb = raw_mb
                 menu_binding = MenuBinding(
                     category=mb["category"],
                     group=mb.get("group", "General"),
                     label=mb["label"],
                     icon=mb.get("icon", "circle"),
                     order=mb.get("order", 100),
-                    viewRoute=mb.get("viewRoute"),
-                    interactionType=mb.get("interactionType", InteractionType.TRIGGER.value),
+                    viewRoute=mb.get("viewRoute") or mb.get("view_route"),
+                    interactionType=mb.get("interactionType") or mb.get("interaction_type", InteractionType.TRIGGER.value),
                     badge=mb.get("badge"),
                 )
 
@@ -827,6 +828,19 @@ class ApiActionResult:
     data: Any = None
     error: Optional[Dict[str, Any]] = None
     audit: Optional[Dict[str, Any]] = None
+    status: Optional[str] = None
+    errors: Optional[List[Dict[str, Any]]] = None
+    meta: Optional[Dict[str, Any]] = None
+
+    def __post_init__(self):
+        if self.status is None:
+            self.status = "success" if self.success else "error"
+        if self.errors is None and self.error:
+            self.errors = [self.error]
+        elif self.errors is None:
+            self.errors = []
+        if self.meta is None:
+            self.meta = {"protocol": self.protocol, "latencyMs": self.latencyMs, "endpointId": self.endpointId}
 
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)
