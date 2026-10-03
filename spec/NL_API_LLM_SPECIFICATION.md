@@ -118,14 +118,15 @@ The Universal API Registry is the canonical catalog of all callable services, en
    - `read_only`: Boolean flag indicating idempotent, side-effect-free reading.
    - `roles`: Access control requirements (e.g. `["admin", "dev"]`).
    - `tags`: Domain taxonomy for classification and filtering.
-5. **Frontend Menu Binding (`menu_binding`)**:
-   - `category`: Top-level navigation category (e.g. `Accounts`, `KVM Desktop`, `Scenarios`, `Diagnostics`).
+5. **Frontend Menu Binding (`menuBinding` / `menu_binding`)**:
+   - Both `camelCase` (JSON schema canonical form: `menuBinding`, `viewRoute`, `interactionType`) and `snake_case` (DSL & Pythonic aliases: `menu_binding`, `view_route`, `interaction_type`) are supported across manifests and parsed interoperably.
+   - `category`: Top-level navigation category (e.g. `Accounts`, `KVM Desktop`, `Scenarios`, `Diagnostics`, `work`, `tools`).
    - `group`: Sub-group within category.
    - `label`: Human-readable display label (multilingual dict or localized string).
    - `icon`: Icon identifier for frontend rendering.
    - `order`: Numeric sort priority.
-   - `view_route`: Target route or view URL if navigation is involved.
-   - `interaction_type`: One of:
+   - `viewRoute` / `view_route`: Target route or view URL if navigation is involved.
+   - `interactionType` / `interaction_type`: One of:
      - `trigger`: Immediate one-click action execution.
      - `modal_form`: Displays parameter collection form before dispatch.
      - `view_navigate`: Navigates to frontend view/URL.
@@ -185,6 +186,12 @@ Protocol drivers isolate execution mechanics:
 3. **`KvmDriver`**: Interacts with container X11 displays, RFB sockets, and native `xdotool` automation.
 4. **`McpDriver`**: Dispatches calls via Model Context Protocol JSON-RPC.
 
+#### Unified Response Envelope (`api-action-result.schema.json`):
+All executions emit a standardized response envelope. In harmonization with parent standard `wellmanifest/nl-dsl-llm`:
+- Core fields: `success` (bool), `endpointId` (str), `protocol` (str), `timestamp` (ISO8601), `latencyMs` (float), `statusCode` (int), `data` (any).
+- Error representation: `error` object (`code`, `message`, `details`) alongside harmonized `errors` collection.
+- Lifecycle compatibility: `status` (`success`, `error`, `pending`) and `meta` (execution telemetry), ensuring zero-overhead composability with DSL runners.
+
 ---
 
 ## 3. Reference Implementations
@@ -201,5 +208,5 @@ A conforming implementation of `wellmanifest/nl-api-llm` MUST:
 1. Validate all API manifests against `schemas/api-registry.schema.json`.
 2. Generate valid menu trees conforming to `schemas/menu-tree.schema.json`.
 3. Provide a deterministic NL matcher that resolves standard operations in < 10ms with 0 LLM calls.
-4. Normalize all execution results into the standard response envelope (`schemas/api-action-result.schema.json`).
+4. Normalize all execution results into the standard response envelope (`schemas/api-action-result.schema.json`), compatible with `wellmanifest/nl-dsl-llm` envelopes.
 5. Guarantee role-based permission fences prior to dispatching any mutating API action.

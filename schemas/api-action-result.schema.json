@@ -31,6 +31,19 @@
         "role": { "type": "string" },
         "sanitizedParams": { "type": "object" }
       }
+    },
+    "status": {
+      "type": "string",
+      "description": "Lifecycle status harmonized with nl-dsl-llm envelope (e.g. success, error, pending)"
+    },
+    "errors": {
+      "type": "array",
+      "description": "Error collection harmonized with parent nl-dsl-llm envelope",
+      "items": { "type": "object" }
+    },
+    "meta": {
+      "type": "object",
+      "description": "Execution metadata envelope harmonized with parent nl-dsl-llm"
     }
   }
 }
