@@ -1,0 +1,84 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-005",
+  "summary": "standardize standard adoption and pytest configuration",
+  "workstream": "integration",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P2",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-005/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "pyproject.toml"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "48e00e3315eca28a8949d4d7dac0ba99038e3f92",
+    "targetBranch": "main",
+    "outcome": "Standardize adoption of wellmanifest/nl-dsl-llm@0.1.0 in pyproject.toml and align pytest testpaths and pythonpath configuration.",
+    "nonGoals": [
+      "Alter core API registry models or tripartite translation algorithms",
+      "Add new runtime dependencies"
+    ],
+    "complexity": "M",
+    "estimatedMinutes": 30,
+    "budgets": {
+      "maxImplementationFiles": 3,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 2
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Add adopts = [\"wellmanifest/nl-dsl-llm@0.1.0\"] to [tool.wellmanifest] in pyproject.toml, and configure testpaths, python_files, and pythonpath under [tool.pytest.ini_options].",
+      "components": [
+        {
+          "name": "packaging",
+          "paths": [
+            "pyproject.toml"
+          ]
+        },
+        {
+          "name": "governance",
+          "paths": [
+            "project/ticket-005/**",
+            "project/TICKETS.md",
+            "TODO.md"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert ticket-005 commit."
+    },
+    "runtimeDependencies": [
+      "pydantic",
+      "jsonschema"
+    ],
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "pytest",
+          "./project/governance-check.sh"
+        ],
+        "evidence": "Pytest passes all 12 tests and governance check passes with 0 errors, 0 warnings."
+      }
+    ]
+  }
+}
