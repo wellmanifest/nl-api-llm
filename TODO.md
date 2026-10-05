@@ -7,3 +7,4 @@
 - [x] S4: Reference API manifest and menu structure for `clonerd-com/prepanel` and `clonerd-com/app`
 - [x] S5: Conformance tests and validation suite (`tests/`)
 - [ ] S6: Live streaming WebSocket & gRPC protocol drivers
+- [x] Ticket-005: Standardize standard adoption and pytest configuration
