@@ -799,6 +799,9 @@ class LLMQueryCompiler:
             )
 
         # Default fallback heuristic when offline
+        params: Dict[str, Any] = {"prompt": query}
+        if context:
+            params["context"] = context
         return ApiExecutionPlan(
             confidence=0.5,
             strategy="llm",
@@ -806,7 +809,7 @@ class LLMQueryCompiler:
             actions=[
                 CompiledAction(
                     endpointId="prepanel.views.chat",
-                    parameters={"prompt": query},
+                    parameters=params,
                     description="Przekierowanie do asystenta Chat LLM z zachowaniem kontekstu",
                 )
             ]
