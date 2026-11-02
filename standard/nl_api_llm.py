@@ -13,7 +13,23 @@ import sys
 import time
 from dataclasses import asdict, dataclass, field
 from enum import Enum
+from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+import unicodedata
+
+
+def _load_intent_triggers() -> Dict[str, List[str]]:
+    profile_path = Path(__file__).resolve().with_name("semantic-profile.json")
+    data = json.loads(profile_path.read_text(encoding="utf-8"))
+    return {str(k): list(v) for k, v in (data.get("intent_triggers") or {}).items()}
+
+
+_INTENT_TRIGGERS: Dict[str, List[str]] = _load_intent_triggers()
+
+
+def _out(msg: str, stream: Any = None) -> None:
+    target = sys.stdout if stream is None else stream
+    target.write(f"{msg}\n")
 
 
 # ============================================================================
@@ -579,23 +595,17 @@ class NLIntentMatcher:
 
     def normalize(self, text: str) -> str:
         """Removes diacritics and normalizes whitespace and punctuation for tolerant matching."""
-        text = text.lower().strip()
-        pl_map = {
-            'ą': 'a', 'ć': 'c', 'ę': 'e', 'ł': 'l', 'ń': 'n',
-            'ó': 'o', 'ś': 's', 'ź': 'z', 'ż': 'z'
-        }
-        for k, v in pl_map.items():
-            text = text.replace(k, v)
-        text = re.sub(r'[,.!?\'";:()\[\]{}]', ' ', text)
-        return re.sub(r'\s+', ' ', text).strip()
+        lowered = text.lower().strip().translate({0x0142: "l"})
+        folded = "".join(c for c in unicodedata.normalize("NFKD", lowered) if not unicodedata.combining(c))
+        cleaned = re.sub(r'[,.!?\'";:()\[\]{}]', ' ', folded)
+        return re.sub(r'\s+', ' ', cleaned).strip()
 
     def parse(self, raw_query: str, context: Optional[Dict[str, Any]] = None) -> ApiExecutionPlan:
         ctx = context or {}
         norm = self.normalize(raw_query)
 
         # 1. Port sharing pattern
-        # "udostępnij porty", "port-share", "share ports", "wystaw porty"
-        if any(w in norm for w in ["udostepnij porty", "port share", "wystaw porty", "share ports", "przekieruj porty"]):
+        if any(w in norm for w in _INTENT_TRIGGERS.get("premesh.ports.share", ())):
             account = ctx.get("activeAccount", "prototypowanie")
             host = ctx.get("activeHost", "nvidia")
             m_acc = re.search(r'(?:dla konta|konto|account)\s+([a-zA-Z0-9_\-]+)', norm)
@@ -625,8 +635,7 @@ class NLIntentMatcher:
             )
 
         # 2. System logs pattern
-        # "pobierz logi", "pokaż logi", "fetch logs", "system logs", "daj logi", "logów"
-        if any(w in norm for w in ["log", "logi", "logow", "pobierz log", "pokaz log", "fetch log", "system log", "view log"]):
+        if any(w in norm for w in _INTENT_TRIGGERS.get("premesh.logs.fetch", ())):
             host = ctx.get("activeHost", "nvidia")
             lines = 60
             m_lines = re.search(r'(\d+)\s*(?:linii|wierszy|lines)', norm)
@@ -650,8 +659,7 @@ class NLIntentMatcher:
             )
 
         # 3. HUI Test scenario
-        # "test hui", "uruchom test hui", "run hui test", "c2004 test hui"
-        if any(w in norm for w in ["test hui", "hui test", "uruchom test hui", "test-hui"]):
+        if any(w in norm for w in _INTENT_TRIGGERS.get("prepanel.scenarios.test_hui", ())):
             account = ctx.get("activeAccount", "prototypowanie")
             host = ctx.get("activeHost", "nvidia")
             return ApiExecutionPlan(
@@ -668,8 +676,7 @@ class NLIntentMatcher:
             )
 
         # 4. Connect Scenario
-        # "connect scenario", "uruchom connect scenario", "scenariusz c2004", "edytor scenariuszy"
-        if any(w in norm for w in ["connect scenario", "connect-scenario", "scenariusz c2004", "edytor scenariuszy"]):
+        if any(w in norm for w in _INTENT_TRIGGERS.get("prepanel.scenarios.connect_scenario", ())):
             account = ctx.get("activeAccount", "prototypowanie")
             host = ctx.get("activeHost", "nvidia")
             return ApiExecutionPlan(
@@ -686,8 +693,7 @@ class NLIntentMatcher:
             )
 
         # 5. System Health
-        # "health", "status systemu", "healthz", "sprawdz system"
-        if any(w in norm for w in ["health", "status systemu", "healthz", "sprawdz system"]):
+        if any(w in norm for w in _INTENT_TRIGGERS.get("premesh.system.health", ())):
             return ApiExecutionPlan(
                 confidence=1.0,
                 strategy="deterministic",
@@ -702,8 +708,7 @@ class NLIntentMatcher:
             )
 
         # 6. Accounts listing
-        # "konta", "pokaz konta", "wypisz konta", "list accounts"
-        if any(w in norm for w in ["pokaz konta", "wypisz konta", "list accounts", "konta", "konta hub"]):
+        if any(w in norm for w in _INTENT_TRIGGERS.get("premesh.accounts.list", ())):
             host = ctx.get("activeHost", "nvidia")
             return ApiExecutionPlan(
                 confidence=1.0,
@@ -929,7 +934,7 @@ class ApiOrchestrator:
 
 def run_self_tests() -> int:
     """Verifies standard conformance across registry, menu generator, and NL parsing."""
-    print("=== Running wellmanifest/nl-api-llm Reference Self-Tests ===")
+    _out("=== Running wellmanifest/nl-api-llm Reference Self-Tests ===")
     
     # 1. Create minimal registry
     registry = ApiRegistry(
@@ -1024,14 +1029,14 @@ def run_self_tests() -> int:
     reg_dict = registry.to_dict()
     assert reg_dict["version"] == "0.1.0"
     assert len(reg_dict["endpoints"]) == 3
-    print("✓ Check 1: Registry serialization & schema parity passed.")
+    _out("✓ Check 1: Registry serialization & schema parity passed.")
 
     # Test 2: Dynamic Menu Generation
     menu_gen = MenuGenerator(registry)
     menu = menu_gen.generate_menu(user_role="admin")
     assert len(menu["categories"]) == 3
     assert len(menu["searchIndex"]) == 3
-    print("✓ Check 2: Dynamic menu & search index generation passed.")
+    _out("✓ Check 2: Dynamic menu & search index generation passed.")
 
     # Test 3: Deterministic Polish NL Parsing
     matcher = NLIntentMatcher(registry)
@@ -1041,20 +1046,20 @@ def run_self_tests() -> int:
     assert plan_pl.actions[0].endpointId == "premesh.ports.share"
     assert plan_pl.actions[0].parameters["account"] == "prototypowanie"
     assert plan_pl.actions[0].parameters["host"] == "nvidia"
-    print("✓ Check 3: Deterministic Polish NL parsing passed.")
+    _out("✓ Check 3: Deterministic Polish NL parsing passed.")
 
     # Test 4: System Logs Query Parsing
     plan_logs = matcher.parse("Pobierz ostatnie 100 linii logów z hosta nvidia")
     assert plan_logs.confidence == 1.0
     assert plan_logs.actions[0].endpointId == "premesh.logs.fetch"
     assert plan_logs.actions[0].parameters["lines"] == 100
-    print("✓ Check 4: Parameterized system logs NL parsing passed.")
+    _out("✓ Check 4: Parameterized system logs NL parsing passed.")
 
     # Test 5: Scenario Trigger Parsing
     plan_hui = matcher.parse("odpal test hui w novnc")
     assert plan_hui.confidence == 1.0
     assert plan_hui.actions[0].endpointId == "prepanel.scenarios.test_hui"
-    print("✓ Check 5: Scenarios NL parsing passed.")
+    _out("✓ Check 5: Scenarios NL parsing passed.")
 
     # Test 6: End-to-End Orchestrator Dispatch & RBAC
     orchestrator = ApiOrchestrator(registry, mock_mode=True)
@@ -1067,9 +1072,9 @@ def run_self_tests() -> int:
     _, denied_res = orchestrator.query("udostępnij porty", caller_role="guest")
     assert denied_res[0].success is False
     assert denied_res[0].statusCode == 403
-    print("✓ Check 6: End-to-end dispatch and RBAC security fence passed.")
+    _out("✓ Check 6: End-to-end dispatch and RBAC security fence passed.")
 
-    print("\nALL 6/6 SELF-TESTS PASSED CONFORMANCE.")
+    _out("\nALL 6/6 SELF-TESTS PASSED CONFORMANCE.")
     return 0
 
 
@@ -1090,7 +1095,7 @@ def main():
 
     if args.menu:
         if not args.registry:
-            print("Error: --registry is required when using --menu", file=sys.stderr)
+            _out("Error: --registry is required when using --menu", stream=sys.stderr)
             sys.exit(1)
         with open(args.registry, "r", encoding="utf-8") as f:
             data = json.load(f)
@@ -1101,21 +1106,21 @@ def main():
         if args.output_json:
             with open(args.output_json, "w", encoding="utf-8") as f:
                 json.dump(menu_tree, f, indent=2, ensure_ascii=False)
-            print(f"Saved menu tree JSON to {args.output_json}")
+            _out(f"Saved menu tree JSON to {args.output_json}")
 
         if args.output_html:
             html_content = gen.export_html_component(menu_tree)
             with open(args.output_html, "w", encoding="utf-8") as f:
                 f.write(html_content)
-            print(f"Saved HTML menu preview to {args.output_html}")
+            _out(f"Saved HTML menu preview to {args.output_html}")
 
         if not args.output_json and not args.output_html:
-            print(json.dumps(menu_tree, indent=2, ensure_ascii=False))
+            _out(json.dumps(menu_tree, indent=2, ensure_ascii=False))
         sys.exit(0)
 
     if args.query:
         if not args.registry:
-            print("Error: --registry is required when using --query", file=sys.stderr)
+            _out("Error: --registry is required when using --query", stream=sys.stderr)
             sys.exit(1)
         with open(args.registry, "r", encoding="utf-8") as f:
             data = json.load(f)
@@ -1131,7 +1136,7 @@ def main():
             },
             "results": [r.to_dict() for r in results],
         }
-        print(json.dumps(output, indent=2, ensure_ascii=False))
+        _out(json.dumps(output, indent=2, ensure_ascii=False))
         sys.exit(0)
 
     parser.print_help()

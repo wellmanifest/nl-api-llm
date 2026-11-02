@@ -1,0 +1,53 @@
+{
+  "profile": "semantic-v1",
+  "envelope": "wellmanifest.nl-plan/v1",
+  "unicode": "preserve",
+  "retrieval": "multilingual-semantic",
+  "generation": "operation-specialized-json-schema",
+  "compilation_executes": false,
+  "runtime_owner": "paxlet-com/dockuri",
+  "intent_triggers": {
+    "premesh.ports.share": [
+      "udostepnij porty",
+      "port share",
+      "wystaw porty",
+      "share ports",
+      "przekieruj porty"
+    ],
+    "premesh.logs.fetch": [
+      "log",
+      "logi",
+      "logow",
+      "pobierz log",
+      "pokaz log",
+      "fetch log",
+      "system log",
+      "view log"
+    ],
+    "prepanel.scenarios.test_hui": [
+      "test hui",
+      "hui test",
+      "uruchom test hui",
+      "test-hui"
+    ],
+    "prepanel.scenarios.connect_scenario": [
+      "connect scenario",
+      "connect-scenario",
+      "scenariusz c2004",
+      "edytor scenariuszy"
+    ],
+    "premesh.system.health": [
+      "health",
+      "status systemu",
+      "healthz",
+      "sprawdz system"
+    ],
+    "premesh.accounts.list": [
+      "pokaz konta",
+      "wypisz konta",
+      "list accounts",
+      "konta",
+      "konta hub"
+    ]
+  }
+}

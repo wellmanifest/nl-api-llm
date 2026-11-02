@@ -1,0 +1,83 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-007",
+  "summary": "Externalize NL intent rules and eliminate NOHARDCODE-001/007 findings",
+  "workstream": "integration",
+  "classification": {
+    "kind": "SERVICE",
+    "priority": "P2",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-007/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "standard/nl_api_llm.py",
+    "standard/semantic-profile.json"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [
+    "python"
+  ],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "973918a01cb9e919767962b62fc5a4e63eb977be",
+    "targetBranch": "main",
+    "outcome": "Externalize hardcoded NL intent trigger phrases into standard/semantic-profile.json and replace raw print() calls in standard/nl_api_llm.py so nohardcode_check.py passes with 0 violations.",
+    "nonGoals": [
+      "No breaking changes to ApiRegistry, MenuGenerator, NLIntentMatcher, or ApiOrchestrator public APIs"
+    ],
+    "complexity": "S",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 5,
+      "maxAffectedComponents": 2,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Store default deterministic NL intent trigger phrases in standard/semantic-profile.json and load them in NLIntentMatcher.",
+      "components": [
+        {
+          "name": "nl-api-llm-standard",
+          "paths": [
+            "standard/nl_api_llm.py",
+            "standard/semantic-profile.json"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the ticket-007 commit."
+    },
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "python3 .governance/standard_pack_check.py --root .",
+          "./project/governance-check.sh"
+        ],
+        "evidence": "project/ticket-007/README.md"
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "pytest -q"
+        ],
+        "evidence": "project/ticket-007/README.md"
+      }
+    ],
+    "runtimeDependencies": []
+  }
+}
