@@ -1,0 +1,95 @@
+{
+  "schema": "new-project.intent/v3",
+  "ticket": "ticket-008",
+  "summary": "Modularize nl_api_llm under 500 lines and fix HTML XSS, symlink/JSON I/O, and query bounds",
+  "workstream": "integration",
+  "classification": {
+    "kind": "BUG",
+    "priority": "P1",
+    "origin": "health"
+  },
+  "allowedPaths": [
+    "project/ticket-006/README.md",
+    "project/ticket-007/README.md",
+    "project/ticket-008/**",
+    "TODO.md",
+    "project/TICKETS.md",
+    "standard/nl_api_models.py",
+    "standard/nl_api_menu.py",
+    "standard/nl_api_matcher.py",
+    "standard/nl_api_llm.py",
+    "standard/test_conformance.py"
+  ],
+  "forbiddenPaths": [
+    "project/ticket-*/user-*.md"
+  ],
+  "stacks": [
+    "python"
+  ],
+  "dependsOn": [],
+  "conflictsWith": [],
+  "integrationTicket": null,
+  "delivery": {
+    "acceptedBaseSha": "d98e809ed554cc74c73b883495057cd0763507ea",
+    "targetBranch": "main",
+    "outcome": "Modularize standard/nl_api_llm.py (1146L) into 4 modules strictly below 500 lines, remediate HTML/JS XSS in MenuGenerator.export_html_component, enforce bounded non-symlink regular-file JSON reading and atomic output writing, bound query lengths and huge digit extractions in NLIntentMatcher, expand standard/test_conformance.py, and reconcile merged ticket-006 and ticket-007 statuses to DONE.",
+    "nonGoals": [
+      "No breaking changes to ApiRegistry, MenuGenerator, NLIntentMatcher, LLMQueryCompiler, or ApiOrchestrator public signatures",
+      "No new runtime dependencies"
+    ],
+    "complexity": "M",
+    "estimatedMinutes": 25,
+    "budgets": {
+      "maxImplementationFiles": 5,
+      "maxAffectedComponents": 1,
+      "maxPublicInterfaceChanges": 0,
+      "maxRuntimeDependencies": 0
+    },
+    "architecture": {
+      "status": "accepted",
+      "decision": "Decompose standard/nl_api_llm.py into standard/nl_api_models.py, standard/nl_api_menu.py, standard/nl_api_matcher.py, and standard/nl_api_llm.py re-exporting all public classes and helpers.",
+      "components": [
+        {
+          "name": "nl-api-llm-standard",
+          "paths": [
+            "standard/nl_api_models.py",
+            "standard/nl_api_menu.py",
+            "standard/nl_api_matcher.py",
+            "standard/nl_api_llm.py",
+            "standard/test_conformance.py"
+          ]
+        }
+      ],
+      "responsibilityChanges": false,
+      "interfaceChanges": [],
+      "dataChanges": [],
+      "ui": {
+        "impact": "none",
+        "states": [],
+        "evidence": []
+      },
+      "rollback": "Revert the ticket-008 branch commit or close the pull request before merge."
+    },
+    "validation": [
+      {
+        "criterion": "AC-01",
+        "commands": [
+          "ruff check --no-cache standard",
+          "PYTHONDONTWRITEBYTECODE=1 python3 standard/nl_api_llm.py --self-test",
+          "PYTHONDONTWRITEBYTECODE=1 python3 -m pytest -q -p no:cacheprovider"
+        ],
+        "evidence": "project/ticket-008/README.md"
+      },
+      {
+        "criterion": "AC-02",
+        "commands": [
+          "python3 .governance/standard_pack_check.py --root .",
+          "./project/governance-check.sh --base origin/main",
+          "wellman check"
+        ],
+        "evidence": "project/ticket-008/README.md"
+      }
+    ],
+    "runtimeDependencies": []
+  }
+}
